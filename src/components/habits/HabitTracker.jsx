@@ -7,9 +7,9 @@ import HabitCalendar from "./HabitCalendar";
 
 import {
   addHabit,
-  getHabits,
   deleteHabit,
   updateHabit,
+  subscribeToHabits,
 } from "../../services/firestore";
 
 import {
@@ -22,13 +22,14 @@ export default function HabitTracker({ user }) {
   const [newHabit, setNewHabit] = useState("");
 
   useEffect(() => {
-    loadHabits();
-  }, []);
+    if (!user) return;
 
-  async function loadHabits() {
-    const data = await getHabits(user.uid);
-    setHabits(data);
-  }
+    const unsubscribe = subscribeToHabits(user.uid, (data) => {
+      setHabits(data);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
 
   async function handleAdd() {
     if (!newHabit.trim()) return;
@@ -36,13 +37,10 @@ export default function HabitTracker({ user }) {
     await addHabit(user.uid, newHabit);
 
     setNewHabit("");
-
-    loadHabits();
   }
 
   async function handleDelete(habitId) {
     await deleteHabit(user.uid, habitId);
-    loadHabits();
   }
 
   async function toggleDay(habit, dayKey) {
@@ -59,8 +57,6 @@ export default function HabitTracker({ user }) {
     await updateHabit(user.uid, habit.id, {
       completedDays,
     });
-
-    loadHabits();
   }
 
   return (
@@ -95,11 +91,8 @@ export default function HabitTracker({ user }) {
               className="bg-gray-50 rounded-2xl border border-gray-200 p-6"
             >
               <div className="flex justify-between items-start gap-4">
-
                 <div className="flex-1">
-
                   <div className="flex items-center justify-between">
-
                     <h3 className="text-xl font-bold">
                       {habit.name}
                     </h3>
@@ -110,11 +103,9 @@ export default function HabitTracker({ user }) {
                     >
                       Delete
                     </Button>
-
                   </div>
 
                   <div className="flex gap-6 mt-4 mb-5 text-sm">
-
                     <div className="bg-white px-4 py-2 rounded-xl shadow-sm">
                       🔥
                       <span className="font-semibold ml-2">
@@ -126,21 +117,16 @@ export default function HabitTracker({ user }) {
                       📊
                       <span className="font-semibold ml-2">
                         {getCompletionPercentage(habit.completedDays)}%
-                        Complete
+                        {" "}Complete
                       </span>
                     </div>
-
                   </div>
 
                   <HabitCalendar
                     habit={habit}
-                    onToggle={(dayKey) =>
-                      toggleDay(habit, dayKey)
-                    }
+                    onToggle={(dayKey) => toggleDay(habit, dayKey)}
                   />
-
                 </div>
-
               </div>
             </div>
           ))}
