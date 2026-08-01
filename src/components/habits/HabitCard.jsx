@@ -1,5 +1,6 @@
 import Button from "../ui/Button";
 import HabitCalendar from "./HabitCalendar";
+import CategoryBadge from "./CategoryBadge";
 
 import {
   getCompletionPercentage,
@@ -20,29 +21,18 @@ export default function HabitCard({
   );
 
   return (
-    <div className="bg-white rounded-2xl shadow-md border p-6 hover:shadow-lg transition">
+    <div className="bg-white rounded-2xl shadow-md border p-6 hover:shadow-xl transition">
 
       <div className="flex justify-between items-start">
 
         <div>
 
-          <div className="flex items-center gap-3">
+          <CategoryBadge
+            category={habit.category || "Personal"}
+            color={habit.color || "#22c55e"}
+          />
 
-            <div
-              className="w-4 h-4 rounded-full"
-              style={{
-                backgroundColor:
-                  habit.color || "#22c55e",
-              }}
-            />
-
-            <span className="text-sm text-gray-500">
-              Habit
-            </span>
-
-          </div>
-
-          <h3 className="text-2xl font-bold mt-2">
+          <h3 className="text-2xl font-bold mt-4">
             {habit.name}
           </h3>
 
@@ -59,11 +49,9 @@ export default function HabitCard({
 
       <div className="mt-6">
 
-        <div className="flex justify-between mb-2">
+        <div className="flex justify-between text-sm mb-2">
 
-          <span className="text-sm font-medium">
-            Progress
-          </span>
+          <span>Progress</span>
 
           <span className="font-semibold">
             {completion}%
@@ -71,7 +59,7 @@ export default function HabitCard({
 
         </div>
 
-        <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+        <div className="h-3 rounded-full bg-gray-200 overflow-hidden">
 
           <div
             className="h-full rounded-full"

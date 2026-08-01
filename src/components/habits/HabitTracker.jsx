@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import Card from "../ui/Card";
 import Button from "../ui/Button";
 import Input from "../ui/Input";
+
 import HabitCard from "./HabitCard";
 
 import {
@@ -13,6 +14,7 @@ import {
 } from "../../services/firestore";
 
 const categories = [
+  "All",
   "Personal",
   "Fitness",
   "Study",
@@ -23,44 +25,58 @@ const categories = [
   "Hobby",
 ];
 
-const colors = [
-  "#22c55e",
-  "#3b82f6",
-  "#a855f7",
-  "#f97316",
-  "#ef4444",
-  "#06b6d4",
-  "#eab308",
-  "#ec4899",
-];
-
 export default function HabitTracker({ user }) {
   const [habits, setHabits] = useState([]);
   const [newHabit, setNewHabit] = useState("");
   const [category, setCategory] = useState("Personal");
   const [color, setColor] = useState("#22c55e");
+  const [search, setSearch] = useState("");
+  const [filterCategory, setFilterCategory] = useState("All");
+
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (!user) return;
 
-    const unsubscribe = subscribeToHabits(user.uid, setHabits);
-
-    return unsubscribe;
+    return subscribeToHabits(user.uid, setHabits);
   }, [user]);
 
   async function handleAdd() {
-    if (!newHabit.trim()) return;
+    const habitName = newHabit.trim();
 
-    await addHabit(
-      user.uid,
-      newHabit,
-      category,
-      color
+    if (!habitName) {
+      setError("Please enter a habit name.");
+      return;
+    }
+
+    const duplicate = habits.some(
+      (habit) =>
+        habit.name.toLowerCase() === habitName.toLowerCase()
     );
 
-    setNewHabit("");
-    setCategory("Personal");
-    setColor("#22c55e");
+    if (duplicate) {
+      setError("A habit with this name already exists.");
+      return;
+    }
+
+    try {
+      setSaving(true);
+      setError("");
+
+      await addHabit(
+        user.uid,
+        habitName,
+        category,
+        color
+      );
+
+      setNewHabit("");
+      setCategory("Personal");
+      setColor("#22c55e");
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function handleDelete(id) {
@@ -83,29 +99,54 @@ export default function HabitTracker({ user }) {
     });
   }
 
+  const filteredHabits = useMemo(() => {
+    return habits.filter((habit) => {
+      const matchesSearch = habit.name
+        .toLowerCase()
+        .includes(search.toLowerCase());
+
+      const matchesCategory =
+        filterCategory === "All" ||
+        (habit.category || "Personal") ===
+          filterCategory;
+
+      return matchesSearch && matchesCategory;
+    });
+  }, [habits, search, filterCategory]);
+
   return (
     <Card className="mt-8">
       <h2 className="text-2xl font-bold mb-6">
         📅 Monthly Habits
       </h2>
 
-      <div className="grid md:grid-cols-4 gap-3 mb-8">
+      <div className="grid md:grid-cols-4 gap-3 mb-3">
         <Input
           value={newHabit}
-          onChange={(e) => setNewHabit(e.target.value)}
+          onChange={(e) => {
+            setNewHabit(e.target.value);
+            if (error) setError("");
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              handleAdd();
+            }
+          }}
           placeholder="Habit name..."
         />
 
         <select
+          className="border rounded-xl px-4 py-3"
           value={category}
           onChange={(e) => setCategory(e.target.value)}
-          className="border rounded-xl px-4 py-3"
         >
-          {categories.map((item) => (
-            <option key={item}>
-              {item}
-            </option>
-          ))}
+          {categories
+            .filter((c) => c !== "All")
+            .map((c) => (
+              <option key={c}>
+                {c}
+              </option>
+            ))}
         </select>
 
         <input
@@ -115,18 +156,49 @@ export default function HabitTracker({ user }) {
           className="w-full h-12 rounded-xl border cursor-pointer"
         />
 
-        <Button onClick={handleAdd}>
-          Add Habit
+        <Button
+          onClick={handleAdd}
+          disabled={saving}
+        >
+          {saving ? "Adding..." : "Add Habit"}
         </Button>
       </div>
 
-      {habits.length === 0 ? (
+      {error && (
+        <p className="text-red-500 text-sm mb-6">
+          {error}
+        </p>
+      )}
+
+      <div className="grid md:grid-cols-2 gap-4 mb-8">
+        <Input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="🔍 Search habits..."
+        />
+
+        <select
+          className="border rounded-xl px-4 py-3"
+          value={filterCategory}
+          onChange={(e) =>
+            setFilterCategory(e.target.value)
+          }
+        >
+          {categories.map((c) => (
+            <option key={c}>
+              {c}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {filteredHabits.length === 0 ? (
         <div className="text-center py-10 text-gray-500">
-          No habits yet.
+          No habits found.
         </div>
       ) : (
         <div className="space-y-6">
-          {habits.map((habit) => (
+          {filteredHabits.map((habit) => (
             <HabitCard
               key={habit.id}
               habit={habit}
