@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import Card from "../ui/Card";
 import Button from "../ui/Button";
 import Input from "../ui/Input";
-import HabitCalendar from "./HabitCalendar";
+
+import HabitCard from "./HabitCard";
 
 import {
   addHabit,
@@ -12,11 +13,6 @@ import {
   subscribeToHabits,
 } from "../../services/firestore";
 
-import {
-  getCompletionPercentage,
-  getCurrentStreak,
-} from "../../utils/streak";
-
 export default function HabitTracker({ user }) {
   const [habits, setHabits] = useState([]);
   const [newHabit, setNewHabit] = useState("");
@@ -24,11 +20,12 @@ export default function HabitTracker({ user }) {
   useEffect(() => {
     if (!user) return;
 
-    const unsubscribe = subscribeToHabits(user.uid, (data) => {
-      setHabits(data);
-    });
+    const unsubscribe = subscribeToHabits(
+      user.uid,
+      setHabits
+    );
 
-    return () => unsubscribe();
+    return unsubscribe;
   }, [user]);
 
   async function handleAdd() {
@@ -39,8 +36,8 @@ export default function HabitTracker({ user }) {
     setNewHabit("");
   }
 
-  async function handleDelete(habitId) {
-    await deleteHabit(user.uid, habitId);
+  async function handleDelete(id) {
+    await deleteHabit(user.uid, id);
   }
 
   async function toggleDay(habit, dayKey) {
@@ -61,77 +58,50 @@ export default function HabitTracker({ user }) {
 
   return (
     <Card className="mt-8">
+
       <div className="flex justify-between items-center mb-6">
+
         <h2 className="text-2xl font-bold">
           📅 Monthly Habits
         </h2>
+
       </div>
 
       <div className="flex gap-3 mb-8">
+
         <Input
           value={newHabit}
-          onChange={(e) => setNewHabit(e.target.value)}
+          onChange={(e) =>
+            setNewHabit(e.target.value)
+          }
           placeholder="Add a new habit..."
         />
 
         <Button onClick={handleAdd}>
           Add Habit
         </Button>
+
       </div>
 
       {habits.length === 0 ? (
-        <div className="text-center text-gray-500 py-10">
-          No habits yet. Add your first habit above.
+        <div className="text-center py-10 text-gray-500">
+          No habits yet.
         </div>
       ) : (
         <div className="space-y-6">
+
           {habits.map((habit) => (
-            <div
+            <HabitCard
               key={habit.id}
-              className="bg-gray-50 rounded-2xl border border-gray-200 p-6"
-            >
-              <div className="flex justify-between items-start gap-4">
-                <div className="flex-1">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-xl font-bold">
-                      {habit.name}
-                    </h3>
-
-                    <Button
-                      className="bg-red-500 hover:bg-red-600"
-                      onClick={() => handleDelete(habit.id)}
-                    >
-                      Delete
-                    </Button>
-                  </div>
-
-                  <div className="flex gap-6 mt-4 mb-5 text-sm">
-                    <div className="bg-white px-4 py-2 rounded-xl shadow-sm">
-                      🔥
-                      <span className="font-semibold ml-2">
-                        {getCurrentStreak(habit.completedDays)} Day Streak
-                      </span>
-                    </div>
-
-                    <div className="bg-white px-4 py-2 rounded-xl shadow-sm">
-                      📊
-                      <span className="font-semibold ml-2">
-                        {getCompletionPercentage(habit.completedDays)}%
-                        {" "}Complete
-                      </span>
-                    </div>
-                  </div>
-
-                  <HabitCalendar
-                    habit={habit}
-                    onToggle={(dayKey) => toggleDay(habit, dayKey)}
-                  />
-                </div>
-              </div>
-            </div>
+              habit={habit}
+              onDelete={handleDelete}
+              onToggle={toggleDay}
+            />
           ))}
+
         </div>
       )}
+
     </Card>
   );
 }
