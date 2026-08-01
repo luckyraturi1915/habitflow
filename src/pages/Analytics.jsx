@@ -1,26 +1,48 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import MainLayout from "../components/layout/MainLayout";
+import WeeklyChart from "../components/analytics/WeeklyChart";
 
 import { subscribeToHabits } from "../services/firestore";
 import { calculateAnalytics } from "../utils/analytics";
 
 export default function Analytics({ user }) {
-  const [stats, setStats] = useState({
-    totalHabits: 0,
-    completedToday: 0,
-    monthlyCompletion: 0,
-    longestStreak: 0,
-    bestHabit: "No habits yet",
-  });
+  const [habits, setHabits] = useState([]);
 
   useEffect(() => {
     if (!user) return;
 
-    return subscribeToHabits(user.uid, (habits) => {
-      setStats(calculateAnalytics(habits));
-    });
+    return subscribeToHabits(user.uid, setHabits);
   }, [user]);
+
+  const stats = useMemo(
+    () => calculateAnalytics(habits),
+    [habits]
+  );
+
+  const weeklyData = useMemo(() => {
+    const days = [];
+
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+
+      const key = date.toISOString().split("T")[0];
+
+      const count = habits.filter(
+        (habit) => habit.completedDays?.[key]
+      ).length;
+
+      days.push({
+        day: date.toLocaleDateString("en-US", {
+          weekday: "short",
+        }),
+        completed: count,
+      });
+    }
+
+    return days;
+  }, [habits]);
 
   const cards = [
     {
@@ -61,7 +83,7 @@ export default function Analytics({ user }) {
         📈 Analytics Dashboard
       </h1>
 
-      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3 mb-8">
         {cards.map((card) => (
           <div
             key={card.title}
@@ -83,6 +105,8 @@ export default function Analytics({ user }) {
           </div>
         ))}
       </div>
+
+      <WeeklyChart data={weeklyData} />
     </MainLayout>
   );
 }
