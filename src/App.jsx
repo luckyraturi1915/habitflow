@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
-import { auth } from "./firebase";
 import { onAuthStateChanged } from "firebase/auth";
 
-import Login from "./pages/Login";
-import Dashboard from "./pages/Dashboard";
+import { auth } from "./firebase";
 
-import "./App.css";
+import Login from "./pages/Login";
+import AppRoutes from "./routes/AppRoutes";
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -21,8 +20,12 @@ export default function App() {
   }, []);
 
   if (loading) {
-    return <h2 style={{ padding: "40px" }}>Loading...</h2>;
+    return (
+      <div className="flex items-center justify-center min-h-screen text-xl font-semibold">
+        Loading HabitFlow...
+      </div>
+    );
   }
 
-  return user ? <Dashboard user={user} /> : <Login />;
+  return user ? <AppRoutes user={user} /> : <Login />;
 }
