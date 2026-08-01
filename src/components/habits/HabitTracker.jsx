@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import Card from "../ui/Card";
 import Button from "../ui/Button";
 import Input from "../ui/Input";
-
 import HabitCard from "./HabitCard";
 
 import {
@@ -13,17 +12,38 @@ import {
   subscribeToHabits,
 } from "../../services/firestore";
 
+const categories = [
+  "Personal",
+  "Fitness",
+  "Study",
+  "Work",
+  "Health",
+  "Reading",
+  "Finance",
+  "Hobby",
+];
+
+const colors = [
+  "#22c55e",
+  "#3b82f6",
+  "#a855f7",
+  "#f97316",
+  "#ef4444",
+  "#06b6d4",
+  "#eab308",
+  "#ec4899",
+];
+
 export default function HabitTracker({ user }) {
   const [habits, setHabits] = useState([]);
   const [newHabit, setNewHabit] = useState("");
+  const [category, setCategory] = useState("Personal");
+  const [color, setColor] = useState("#22c55e");
 
   useEffect(() => {
     if (!user) return;
 
-    const unsubscribe = subscribeToHabits(
-      user.uid,
-      setHabits
-    );
+    const unsubscribe = subscribeToHabits(user.uid, setHabits);
 
     return unsubscribe;
   }, [user]);
@@ -31,9 +51,16 @@ export default function HabitTracker({ user }) {
   async function handleAdd() {
     if (!newHabit.trim()) return;
 
-    await addHabit(user.uid, newHabit);
+    await addHabit(
+      user.uid,
+      newHabit,
+      category,
+      color
+    );
 
     setNewHabit("");
+    setCategory("Personal");
+    setColor("#22c55e");
   }
 
   async function handleDelete(id) {
@@ -58,29 +85,39 @@ export default function HabitTracker({ user }) {
 
   return (
     <Card className="mt-8">
+      <h2 className="text-2xl font-bold mb-6">
+        📅 Monthly Habits
+      </h2>
 
-      <div className="flex justify-between items-center mb-6">
-
-        <h2 className="text-2xl font-bold">
-          📅 Monthly Habits
-        </h2>
-
-      </div>
-
-      <div className="flex gap-3 mb-8">
-
+      <div className="grid md:grid-cols-4 gap-3 mb-8">
         <Input
           value={newHabit}
-          onChange={(e) =>
-            setNewHabit(e.target.value)
-          }
-          placeholder="Add a new habit..."
+          onChange={(e) => setNewHabit(e.target.value)}
+          placeholder="Habit name..."
+        />
+
+        <select
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          className="border rounded-xl px-4 py-3"
+        >
+          {categories.map((item) => (
+            <option key={item}>
+              {item}
+            </option>
+          ))}
+        </select>
+
+        <input
+          type="color"
+          value={color}
+          onChange={(e) => setColor(e.target.value)}
+          className="w-full h-12 rounded-xl border cursor-pointer"
         />
 
         <Button onClick={handleAdd}>
           Add Habit
         </Button>
-
       </div>
 
       {habits.length === 0 ? (
@@ -89,7 +126,6 @@ export default function HabitTracker({ user }) {
         </div>
       ) : (
         <div className="space-y-6">
-
           {habits.map((habit) => (
             <HabitCard
               key={habit.id}
@@ -98,10 +134,8 @@ export default function HabitTracker({ user }) {
               onToggle={toggleDay}
             />
           ))}
-
         </div>
       )}
-
     </Card>
   );
 }

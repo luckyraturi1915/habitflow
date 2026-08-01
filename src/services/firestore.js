@@ -12,11 +12,17 @@ import {
 } from "firebase/firestore";
 
 // Add a new habit
-export async function addHabit(userId, habitName) {
+export async function addHabit(
+  userId,
+  habitName,
+  category = "Personal",
+  color = "#22c55e"
+) {
   await addDoc(collection(db, "users", userId, "habits"), {
     name: habitName,
+    category,
+    color,
     completedDays: {},
-    color: "#22c55e",
     createdAt: serverTimestamp(),
   });
 }
@@ -33,30 +39,34 @@ export async function getHabits(userId) {
   }));
 }
 
-// Listen for habits in real time
+// Real-time listener
 export function subscribeToHabits(userId, callback) {
   return onSnapshot(
     collection(db, "users", userId, "habits"),
     (snapshot) => {
-      const habits = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-
-      callback(habits);
+      callback(
+        snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }))
+      );
     }
   );
 }
 
-// Delete a habit
+// Delete
 export async function deleteHabit(userId, habitId) {
   await deleteDoc(
     doc(db, "users", userId, "habits", habitId)
   );
 }
 
-// Update a habit
-export async function updateHabit(userId, habitId, data) {
+// Update
+export async function updateHabit(
+  userId,
+  habitId,
+  data
+) {
   await updateDoc(
     doc(db, "users", userId, "habits", habitId),
     data
