@@ -3,14 +3,17 @@ import {
   collection,
   addDoc,
   getDocs,
+  deleteDoc,
   doc,
-  updateDoc,
+  serverTimestamp,
 } from "firebase/firestore";
 
 export async function addHabit(userId, habitName) {
   await addDoc(collection(db, "users", userId, "habits"), {
     name: habitName,
-    days: {},
+    completedDays: {},
+    color: "#22c55e",
+    createdAt: serverTimestamp(),
   });
 }
 
@@ -19,17 +22,14 @@ export async function getHabits(userId) {
     collection(db, "users", userId, "habits")
   );
 
-  return snapshot.docs.map((docSnap) => ({
-    id: docSnap.id,
-    ...docSnap.data(),
+  return snapshot.docs.map((d) => ({
+    id: d.id,
+    ...d.data(),
   }));
 }
 
-export async function updateHabit(userId, habitId, days) {
-  await updateDoc(
-    doc(db, "users", userId, "habits", habitId),
-    {
-      days,
-    }
+export async function deleteHabit(userId, habitId) {
+  await deleteDoc(
+    doc(db, "users", userId, "habits", habitId)
   );
 }
