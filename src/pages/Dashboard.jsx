@@ -5,39 +5,51 @@ import HabitTracker from "../components/habits/HabitTracker";
 
 export default function Dashboard({ user }) {
   return (
-    <div className="flex bg-gray-100 min-h-screen">
+    <div className="min-h-screen bg-gray-100 flex">
+
       <Sidebar />
 
-      <main className="flex-1 p-8">
+      <div className="flex-1 flex flex-col">
+
         <Navbar user={user} />
 
-        <div className="grid md:grid-cols-3 gap-6 mt-8">
-          <DashboardCard
-            icon="🔥"
-            title="Current Streak"
-            value="12 Days"
-            subtitle="Keep it going!"
-          />
+        <main className="p-8">
 
-          <DashboardCard
-            icon="✅"
-            title="Completion"
-            value="84%"
-            subtitle="This Month"
-          />
+          <div className="grid gap-6 md:grid-cols-3">
 
-          <DashboardCard
-            icon="🎯"
-            title="Goals"
-            value="4"
-            subtitle="Active"
-          />
-        </div>
+            <DashboardCard
+              icon="🔥"
+              title="Current Streak"
+              value="12 Days"
+              subtitle="Keep it going!"
+            />
 
-        <div className="mt-8">
-          <HabitTracker user={user} />
-        </div>
-      </main>
+            <DashboardCard
+              icon="✅"
+              title="Completion"
+              value="84%"
+              subtitle="This Month"
+            />
+
+            <DashboardCard
+              icon="🎯"
+              title="Goals"
+              value="4"
+              subtitle="Active Goals"
+            />
+
+          </div>
+
+          <div className="mt-8">
+
+            <HabitTracker user={user} />
+
+          </div>
+
+        </main>
+
+      </div>
+
     </div>
   );
 }
