@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import MainLayout from "../components/layout/MainLayout";
 import WeeklyChart from "../components/analytics/WeeklyChart";
 import CategoryChart from "../components/analytics/CategoryChart";
+import ActivityHeatmap from "../components/analytics/ActivityHeatmap";
 
 import { subscribeToHabits } from "../services/firestore";
 import { calculateAnalytics } from "../utils/analytics";
@@ -50,16 +51,13 @@ export default function Analytics({ user }) {
 
     habits.forEach((habit) => {
       const category = habit.category || "Personal";
-
       counts[category] = (counts[category] || 0) + 1;
     });
 
-    return Object.entries(counts).map(
-      ([name, value]) => ({
-        name,
-        value,
-      })
-    );
+    return Object.entries(counts).map(([name, value]) => ({
+      name,
+      value,
+    }));
   }, [habits]);
 
   const cards = [
@@ -124,11 +122,12 @@ export default function Analytics({ user }) {
         ))}
       </div>
 
-      <div className="grid xl:grid-cols-2 gap-8">
+      <div className="grid xl:grid-cols-2 gap-8 mb-8">
         <WeeklyChart data={weeklyData} />
-
         <CategoryChart data={categoryData} />
       </div>
+
+      <ActivityHeatmap habits={habits} />
     </MainLayout>
   );
 }
