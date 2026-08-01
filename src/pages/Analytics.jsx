@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import MainLayout from "../components/layout/MainLayout";
 import WeeklyChart from "../components/analytics/WeeklyChart";
+import CategoryChart from "../components/analytics/CategoryChart";
 
 import { subscribeToHabits } from "../services/firestore";
 import { calculateAnalytics } from "../utils/analytics";
@@ -42,6 +43,23 @@ export default function Analytics({ user }) {
     }
 
     return days;
+  }, [habits]);
+
+  const categoryData = useMemo(() => {
+    const counts = {};
+
+    habits.forEach((habit) => {
+      const category = habit.category || "Personal";
+
+      counts[category] = (counts[category] || 0) + 1;
+    });
+
+    return Object.entries(counts).map(
+      ([name, value]) => ({
+        name,
+        value,
+      })
+    );
   }, [habits]);
 
   const cards = [
@@ -106,7 +124,11 @@ export default function Analytics({ user }) {
         ))}
       </div>
 
-      <WeeklyChart data={weeklyData} />
+      <div className="grid xl:grid-cols-2 gap-8">
+        <WeeklyChart data={weeklyData} />
+
+        <CategoryChart data={categoryData} />
+      </div>
     </MainLayout>
   );
 }
