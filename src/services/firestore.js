@@ -8,6 +8,7 @@ import {
   doc,
   updateDoc,
   serverTimestamp,
+  onSnapshot,
 } from "firebase/firestore";
 
 // Add a new habit
@@ -20,7 +21,7 @@ export async function addHabit(userId, habitName) {
   });
 }
 
-// Get all habits
+// Get all habits (one-time fetch)
 export async function getHabits(userId) {
   const snapshot = await getDocs(
     collection(db, "users", userId, "habits")
@@ -30,6 +31,21 @@ export async function getHabits(userId) {
     id: doc.id,
     ...doc.data(),
   }));
+}
+
+// Listen for habits in real time
+export function subscribeToHabits(userId, callback) {
+  return onSnapshot(
+    collection(db, "users", userId, "habits"),
+    (snapshot) => {
+      const habits = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      callback(habits);
+    }
+  );
 }
 
 // Delete a habit

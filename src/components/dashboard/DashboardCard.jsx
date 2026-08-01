@@ -1,24 +1,28 @@
 export default function DashboardCard({
+  icon,
   title,
   value,
   subtitle,
-  icon,
 }) {
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-      <div className="text-3xl mb-3">{icon}</div>
+    <div className="bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition">
 
-      <h3 className="text-lg font-semibold">
+      <div className="text-4xl mb-4">
+        {icon}
+      </div>
+
+      <h3 className="text-gray-500 font-medium">
         {title}
       </h3>
 
-      <h1 className="text-4xl font-bold mt-3">
+      <h2 className="text-3xl font-bold mt-2">
         {value}
-      </h1>
+      </h2>
 
-      <p className="text-gray-500 mt-2">
+      <p className="text-gray-400 mt-2">
         {subtitle}
       </p>
+
     </div>
   );
 }
